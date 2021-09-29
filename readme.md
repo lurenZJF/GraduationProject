@@ -1,6 +1,20 @@
 # 项目整体
-|- Data：实验数据集  
-|- Describe: 分析数据的分布   
-|- ******   
-|- *****  
-|- *****  
++ Dataset
+> 实验数据相关信息
+
++ Describe
+> 分析数据的分布
+
++ TextFiltering
+> 推文过滤、预处理等函数
+
+
++ Baseline
+> 对比模型
+
++ HGAT
+> 异构图表征数据
+
++ Event_Cluster
+> 事件聚类
+ 
