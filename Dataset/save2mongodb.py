@@ -1,15 +1,14 @@
-# 将数据存储到mongodb
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
+# 将数据存储到mongodb
+
 import pymongo
 import numpy as np
 import pandas as pd
 import datetime
 # 链接到数据库
 myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-"""
 # 英文数据处理
-
 # 创建一个数据库
 mydbE = myclient["TwitterEvent2012"]
 # 创建一个集合
@@ -30,10 +29,10 @@ for index, row in data.iterrows():
 
 # 总计多少条数据
 print(mycolE.find().count())
-"""
+""" """
 """
 中文数据集处理
-"""
+
 # 创建一个数据库
 mydbC = myclient["NewsEvent"]
 # 创建一个集合
@@ -59,3 +58,4 @@ for index, row in data.iterrows():
     x = mycolC.insert_one(info)
 # 总计多少条数据
 print(mycolC.find().count())
+"""
