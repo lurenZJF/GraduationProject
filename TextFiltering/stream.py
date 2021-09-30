@@ -31,6 +31,5 @@ class MONGO(object):
         return res
 
 
-MG = MONGO("TwitterEvent2012", "tweets")
-res = MG.query('2012-10-22', '2012-10-23')
-print(type(res))
+# MG = MONGO("TwitterEvent2012", "tweets")
+# res = MG.query('2012-10-22', '2012-10-23') # type: Cursor

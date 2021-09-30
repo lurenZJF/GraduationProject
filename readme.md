@@ -15,6 +15,6 @@
 + HGAT
 > 异构图表征数据
 
-+ Event_Cluster
-> 事件聚类
++ Detect
+> 事件流式聚类
  
