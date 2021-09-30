@@ -2,8 +2,14 @@
 # -*- coding:utf-8 -*-
 import sys
 import datetime
+import logging
 sys.path.append('/home/dell/GraduationProject/')
 from TextFiltering.stream import MONGO
+# 日志信息
+log_console = logging.StreamHandler(sys.stdout)
+default_logger = logging.getLogger(__name__)
+default_logger.setLevel(logging.INFO)
+default_logger.addHandler(log_console)
 
 
 
