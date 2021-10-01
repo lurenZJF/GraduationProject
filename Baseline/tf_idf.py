@@ -4,8 +4,7 @@
 func: 用TF_IDF向量表示文本
 """
 from sklearn.feature_extraction.text import TfidfTransformer, TfidfVectorizer
-import numpy as np
-from sklearn.metrics.pairwise import linear_kernel
+from sklearn.metrics import pairwise_distances
 
 
 def feature_vector(sentences: list, matrix=True):
@@ -37,31 +36,6 @@ def feature_vector(sentences: list, matrix=True):
     weight = freq_words_matrix.toarray()  # 计算相似度或者PCA时使用
     # print(weight)
     if matrix:
-        S = len(sentences)
-        i = 0
-        """
-        # 计算欧式距离代码
-        distance_matrix = np.zeros((S, S))  # 创建一个距离矩阵
-        while i < S:
-            j = i
-            while j < S:
-                d = euclidean_distances([weight[i]], [weight[j]])
-                distance_matrix[i][j] = d
-                distance_matrix[j][i] = d
-                j = j+1
-            i = i+1
-        return distance_matrix
-        """
-        # 计算余弦距离
-        sim_matrix = []
-        while i < S:
-            cosine_similarities = linear_kernel(tfidf[i], tfidf).flatten()
-            cosine_similarities = 1 - cosine_similarities
-            cosine = []
-            for c in cosine_similarities:
-                c = int(c*1000)/1000
-                cosine.append(c)
-            sim_matrix.append(cosine)
-            i = i+1
-        return np.array(sim_matrix)
+        X = pairwise_distances(weight, metric='cosine')
+        return X
     return weight
