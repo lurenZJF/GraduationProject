@@ -1,3 +1,4 @@
+# 忽略python编译环境
+.idea/
 # 忽略输出
 /Output/
-# 忽略其他
