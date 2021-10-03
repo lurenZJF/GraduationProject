@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-from sklearn import metrics
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -37,7 +36,7 @@ def distance_analysis(distance, method, index):
                 XL.append(distance[i][j])
             j = j + 1
         i = i + 1
-    print(len(XL))
     sns.distplot(XL, kde_kws={'bw': 0.1})
     # plt.show()
     plt.savefig("../Output/"+method+"/"+str(index)+".png", bbox_inches='tight')
+    plt.close()

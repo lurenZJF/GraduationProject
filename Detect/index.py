@@ -68,7 +68,7 @@ def stream_supervised_cluster(method = "TF_IDF"):
             e_embeddings = feature_vector(token_e)
             distance = w_embeddings + 2 * e_embeddings
             distance_analysis(distance, method, i)
-            db = my_db(eps=2.6, min_sample=2, metric='precomputed', corpus_distance=distance)
+            db = my_db(eps=2.8, min_sample=3, metric='precomputed', corpus_distance=distance)
             # 观察聚类结果
             ans = supervised_show(labels_true, db)
 

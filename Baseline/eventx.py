@@ -3,30 +3,32 @@
 """
 实现eventX方法
 """
+import sys
 import networkx as nx
 import itertools
 import random
+from sklearn import metrics
 from sklearn.metrics.pairwise import linear_kernel
 from sklearn.feature_extraction.text import TfidfVectorizer
+sys.path.append('/home/dell/GraduationProject/')
 from TextFiltering.twitter_preprocessor import *
 # 初始化分词实例
 Cut = TwitterPreprocessor()
 
 
 def construct_dict(doc):
-
     # contains all pairs(sorted) of keywords/entities and their corresponding enclosing tweets' ids as values
     kw_pair_dict = {}
     # contains all distinct keywords and entities as keys, and their corresponding enclosing tweets' ids as values
     kw_dict = {}
-
     m_tweets = []
     # 标签数据
     ground_truths = []
     # 按行遍历数据
     for d in doc:
         tweet_id = d['_id']
-        words, entities = Cut.entity_recognition(d['text'])
+        words = Cut.get_token(d['text'])
+        entities = Cut.entity_recognition(d['text'])
         entities = ['_'.join(tup) for tup in entities]
         for each in entities:
             if each not in kw_dict.keys():
@@ -46,13 +48,10 @@ def construct_dict(doc):
             kw_pair_dict[pair].append(tweet_id)
         ground_truths.append(d['event_id'])
         m_tweets.append(entities + words)
-    # if dir_path is not None:
-    #     pickle.dump(kw_dict, open(dir_path + '/kw_dict.pickle', 'wb'))
-    #     pickle.dump(kw_pair_dict, open(dir_path + '/kw_pair_dict.pickle', 'wb'))
     return kw_pair_dict, kw_dict, ground_truths, m_tweets
 
 
-def map_dicts(kw_pair_dict, kw_dict, dir_path=None):
+def map_dicts(kw_pair_dict, kw_dict):
     """
     构建keywords和enenties的索引，以便于后续生成TF-IDF嵌入
     :param kw_pair_dict:
@@ -69,13 +68,6 @@ def map_dicts(kw_pair_dict, kw_dict, dir_path=None):
     m_kw_pair_dict = {}
     for _, pair in enumerate(kw_pair_dict.keys()):
         m_kw_pair_dict[(map_kw_to_index[pair[0]], map_kw_to_index[pair[1]])] = kw_pair_dict[pair]
-
-    # if dir_path is not None:
-    #     pickle.dump(m_kw_pair_dict, open(dir_path + '/m_kw_pair_dict.pickle', 'wb'))
-    #     pickle.dump(m_kw_dict, open(dir_path + '/m_kw_dict.pickle', 'wb'))
-    #     pickle.dump(map_index_to_kw, open(dir_path + '/map_index_to_kw.pickle', 'wb'))
-    #     pickle.dump(map_kw_to_index, open(dir_path + '/map_kw_to_index.pickle', 'wb'))
-
     return m_kw_pair_dict, m_kw_dict, map_index_to_kw, map_kw_to_index
 
 
@@ -238,6 +230,11 @@ def classify_docs(test_tweets, m_communities, map_kw_to_index, dir_path=None):
 
 
 def event_method(doc):
+    """
+    调用方法，给出聚类结果
+    :param doc:
+    :return:
+    """
     # 固定参数信息
     min_cooccur_time = 2
     min_prob = 0.15
@@ -254,4 +251,8 @@ def event_method(doc):
     detect_kw_communities_iter(G, communities, kw_pair_dict, kw_dict, max_kw_num=max_kw_num)
     m_communities = map_communities(communities, map_kw_to_index)
     classes = classify_docs(m_tweets, m_communities, map_kw_to_index, "../Data/X")
-    return classes
+    NMI = metrics.normalized_mutual_info_score(ground_truths, classes)
+    NMI = round(NMI, 3)
+    ars = metrics.adjusted_rand_score(ground_truths, classes)
+    ars = round(ars, 3)
+
