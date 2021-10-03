@@ -7,10 +7,10 @@ import logging
 import pandas as pd
 sys.path.append('/home/dell/GraduationProject/')
 from TextFiltering.stream import MONGO
-from TextFiltering.twitter_preprocessor import *
 from Baseline.tf_idf import *
 from Detect.utils import *
 from Baseline.cluster_function import *
+from Baseline.eventx import *
 # 日志信息
 log_console = logging.StreamHandler(sys.stdout)
 default_logger = logging.getLogger(__name__)
@@ -52,10 +52,11 @@ def stream_supervised_cluster(method = "TF_IDF"):
     # 存储每次的结果
     result = []
     for i in range(N - 1):
-        # 根据时间信息进行信息检索
+        # 根据时间信息进行信息检索；返回的是游标，会随着遍历而移动
         res = MG.query(time_list[i], time_list[i + 1])
-        contents, time_info, labels_true = build_data(res)
         if method == "TF_IDF":
+            # 解析数据
+            contents, time_info, labels_true = build_data(res)
             # 抽取单词和实体
             token_w = []
             token_e = []
@@ -71,9 +72,8 @@ def stream_supervised_cluster(method = "TF_IDF"):
             db = my_db(eps=2.8, min_sample=3, metric='precomputed', corpus_distance=distance)
             # 观察聚类结果
             ans = supervised_show(labels_true, db)
-
         elif method == "EVENTX":
-            ans = 0
+            ans = event_method(res)
         elif method == "LDA":
             ans = 0
         elif method == "GLOVE":
@@ -81,12 +81,16 @@ def stream_supervised_cluster(method = "TF_IDF"):
         elif method == "DEEP":
             ans = 0
         else:
-            # HGAT
             ans = 0
+            pass
         result.append([time_list[i]]+ans)
-    result = pd.DataFrame(result, columns=['time', "NMI", "ARS", "event_number", "cluster_number", "noise_number"])
-    result.to_csv('../Output/'+method+"/metric.csv", index=False)
+    if method in ["TF_IDF", "DEEP"]:
+        result = pd.DataFrame(result, columns=['time', "NMI", "ARS", "event_number", "cluster_number", "noise_number"])
+    else:
+        result = pd.DataFrame(result, columns=['time', "NMI", "ARS"])
+    result.to_csv('../Output/' + method + "/metric.csv", index=False)
 
 
 if __name__ == "__main__":
     stream_supervised_cluster(method="EVENTX")
+    # stream_supervised_cluster()

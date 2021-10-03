@@ -199,13 +199,12 @@ def map_communities(communities, map_kw_to_index):
     return m_communities
 
 
-def classify_docs(test_tweets, m_communities, map_kw_to_index, dir_path=None):
+def classify_docs(test_tweets, m_communities, map_kw_to_index):
     m_test_tweets = []
     for doc in test_tweets:
         # print(doc)
         m_doc = ' '.join(map_kw_to_index[kw] for kw in doc)
         m_test_tweets.append(m_doc)
-
     vectorizer = TfidfVectorizer()
     X = vectorizer.fit_transform(m_communities + m_test_tweets)
     # print(m_test_tweets)
@@ -223,9 +222,6 @@ def classify_docs(test_tweets, m_communities, map_kw_to_index, dir_path=None):
             classes.append(related_clusters[0])
         else:
             classes.append(random.choice(related_clusters))
-
-    # if dir_path is not None:
-    #     np.save(dir_path + '/classes.npy', classes)
     return classes
 
 
@@ -241,7 +237,7 @@ def event_method(doc):
     max_kw_num = 3
     # 需要修改这里
     kw_pair_dict, kw_dict, ground_truths, m_tweets = construct_dict(doc)
-    m_kw_pair_dict, m_kw_dict, map_index_to_kw, map_kw_to_index = map_dicts(kw_pair_dict, kw_dict, dir_path="../Data/X")
+    m_kw_pair_dict, m_kw_dict, map_index_to_kw, map_kw_to_index = map_dicts(kw_pair_dict, kw_dict)
     # 构造图
     G = construct_kw_graph(kw_pair_dict, kw_dict, min_cooccur_time, min_prob)
     # 从图中检测社区
@@ -250,9 +246,11 @@ def event_method(doc):
     # detect_kw_communities(G, communities, kw_pair_dict, kw_dict, max_kw_num = max_kw_num)
     detect_kw_communities_iter(G, communities, kw_pair_dict, kw_dict, max_kw_num=max_kw_num)
     m_communities = map_communities(communities, map_kw_to_index)
-    classes = classify_docs(m_tweets, m_communities, map_kw_to_index, "../Data/X")
+    classes = classify_docs(m_tweets, m_communities, map_kw_to_index)
     NMI = metrics.normalized_mutual_info_score(ground_truths, classes)
     NMI = round(NMI, 3)
     ars = metrics.adjusted_rand_score(ground_truths, classes)
     ars = round(ars, 3)
+    return [NMI, ars]
+
 
