@@ -2,3 +2,7 @@
 .idea/
 # 忽略输出
 /Output/
+# 忽略描述
+/Describe/
+# 先忽略HGAT模型
+/HGAT/
