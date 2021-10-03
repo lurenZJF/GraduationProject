@@ -11,6 +11,7 @@ from Baseline.tf_idf import *
 from Detect.utils import *
 from Baseline.cluster_function import *
 from Baseline.eventx import *
+from Baseline.lda import *
 # 日志信息
 log_console = logging.StreamHandler(sys.stdout)
 default_logger = logging.getLogger(__name__)
@@ -75,7 +76,14 @@ def stream_supervised_cluster(method = "TF_IDF"):
         elif method == "EVENTX":
             ans = event_method(res)
         elif method == "LDA":
-            ans = 0
+            contents, time_info, labels_true = build_data(res)
+            token_w = []
+            for c in contents:
+                words = Cut.get_token(c)
+                token_w.append(words)
+            distance = run_lda(token_w)
+            db = my_db(eps=2.8, min_sample=2, metric='precomputed', corpus_distance=distance)
+            ans = supervised_show(labels_true, db)
         elif method == "GLOVE":
             ans = 0
         elif method == "DEEP":
@@ -84,7 +92,7 @@ def stream_supervised_cluster(method = "TF_IDF"):
             ans = 0
             pass
         result.append([time_list[i]]+ans)
-    if method in ["TF_IDF", "DEEP"]:
+    if method in ["TF_IDF", "DEEP", "LDA"]:
         result = pd.DataFrame(result, columns=['time', "NMI", "ARS", "event_number", "cluster_number", "noise_number"])
     else:
         result = pd.DataFrame(result, columns=['time', "NMI", "ARS"])
@@ -92,5 +100,5 @@ def stream_supervised_cluster(method = "TF_IDF"):
 
 
 if __name__ == "__main__":
-    stream_supervised_cluster(method="EVENTX")
-    # stream_supervised_cluster()
+    # stream_supervised_cluster(method="EVENTX")
+    stream_supervised_cluster(method="LDA")
