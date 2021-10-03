@@ -173,25 +173,3 @@ def unsupervised_show_db(db, corpus_, time_list):
         }
         json_clusters.append(json_cluster)
     return json_clusters, noise_data
-
-
-def our_metric(labels_true, labels):
-    """
-
-    :param labels_true:
-    :param labels:
-    :return:
-    """
-    # 获取聚类数量
-    n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
-    # 获取噪音点信息，在DBSCAN聚类中，噪音点用-1标记
-    n_noise_ = list(labels).count(-1)
-    # 输出聚类结果
-    # print('Estimated number of clusters: %d' % n_clusters_, flush=True)
-    # print('Estimated number of noise points: %d' % n_noise_, flush=True)
-    # print("The number of events：", len(labels_true.unique()))
-    NMI = metrics.normalized_mutual_info_score(labels_true, labels)
-    NMI = round(NMI, 3)
-    ars = metrics.adjusted_rand_score(labels_true, labels)
-    ars = round(ars, 3)
-    return [NMI, ars, len(labels_true.unique()), n_clusters_, n_noise_]
