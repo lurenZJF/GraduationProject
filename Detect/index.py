@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-import os
+import time
 import sys
 import datetime
-import logging
 import pandas as pd
 sys.path.append('/home/dell/GraduationProject/')
 from TextFiltering.stream import MONGO
@@ -12,13 +11,10 @@ from Detect.utils import *
 from Baseline.cluster_function import *
 from Baseline.eventx import *
 from Baseline.lda import *
-# 日志信息
-log_console = logging.StreamHandler(sys.stdout)
-default_logger = logging.getLogger(__name__)
-default_logger.setLevel(logging.INFO)
-default_logger.addHandler(log_console)
+from Baseline.glove2vec import *
 # 初始化分词实例
 Cut = TwitterPreprocessor()
+G = GenerateWordVectors("../Static/glove2word2vec.txt")
 
 """
 func: 流式聚类主体函数
@@ -52,6 +48,8 @@ def stream_supervised_cluster(method = "TF_IDF"):
     MG = MONGO("TwitterEvent2012", "tweets")
     # 存储每次的结果
     result = []
+    # 开始程序计时
+    start_time = time.time()
     for i in range(N - 1):
         # 根据时间信息进行信息检索；返回的是游标，会随着遍历而移动
         res = MG.query(time_list[i], time_list[i + 1])
@@ -69,8 +67,8 @@ def stream_supervised_cluster(method = "TF_IDF"):
             w_embeddings = feature_vector(token_w)
             e_embeddings = feature_vector(token_e)
             distance = w_embeddings + 2 * e_embeddings
-            distance_analysis(distance, method, i)
-            db = my_db(eps=2.8, min_sample=3, metric='precomputed', corpus_distance=distance)
+            # distance_analysis(distance, method, i)
+            db = my_db(eps=2.7, min_sample=8, metric='precomputed', corpus_distance=distance)
             # 观察聚类结果
             ans = supervised_show(labels_true, db)
         elif method == "EVENTX":
@@ -82,16 +80,27 @@ def stream_supervised_cluster(method = "TF_IDF"):
                 words = Cut.get_token(c)
                 token_w.append(words)
             distance = run_lda(token_w)
+            distance_analysis(distance, method, i)
             db = my_db(eps=2.8, min_sample=2, metric='precomputed', corpus_distance=distance)
             ans = supervised_show(labels_true, db)
         elif method == "GLOVE":
-            ans = 0
+            contents, time_info, labels_true = build_data(res)
+            token_w = []
+            for c in contents:
+                words = Cut.get_token(c)
+                token_w.append(words)
+            distance = G.distance_matrix(token_w)
+            # distance_analysis(distance, method, i)
+            db = my_db(eps=2.8, min_sample=2, metric='precomputed', corpus_distance=distance)
+            ans = supervised_show(labels_true, db)
         elif method == "DEEP":
             ans = 0
         else:
             ans = 0
             pass
         result.append([time_list[i]]+ans)
+    end_time = time.time()
+    print("cost time:", end_time-start_time, flush=True)
     if method in ["TF_IDF", "DEEP", "LDA"]:
         result = pd.DataFrame(result, columns=['time', "NMI", "ARS", "event_number", "cluster_number", "noise_number"])
     else:
@@ -100,5 +109,6 @@ def stream_supervised_cluster(method = "TF_IDF"):
 
 
 if __name__ == "__main__":
+    # stream_supervised_cluster()
     # stream_supervised_cluster(method="EVENTX")
     stream_supervised_cluster(method="LDA")
