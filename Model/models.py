@@ -1,3 +1,11 @@
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+
+"""
+func: 构建HGAT模型
+"""
+import sys
+sys.path.append('/home/dell/GraduationProject/')
 from Model.layers import *
 from torch.nn.parameter import Parameter
 from functools import reduce
@@ -22,14 +30,12 @@ class HGAT(nn.Module):
         if self.write_emb:
             self.emb = None
             self.emb2 = None
-
         self.nonlinear = F.relu_
+        self.nclass = nclass  # 有监督分类：类别数量
+        self.ntype = len(nfeat_list)  # 节点类别数量
 
-        self.nclass = nclass
-        self.ntype = len(nfeat_list)
-
-        dim_1st = nhid
-        dim_2nd = nclass
+        dim_1st = nhid  # 隐藏层节点数据
+        dim_2nd = nclass  # 输出类别数量
         if orphan:
             dim_2nd += self.ntype - 1
 
@@ -44,7 +50,9 @@ class HGAT(nn.Module):
         else:
             self.gc1 = GraphAttentionConvolution(nfeat_list, dim_1st, gamma=gamma)
         self.gc2.append(GraphConvolution(dim_1st, dim_2nd, bias=True))
-
+        # 当self.node_attention = True时
+        # self.gc1 = GraphAttentionConvolution(nfeat_list, dim_1st, gamma=gamma)
+        # self.gc2 = [GraphAttentionConvolution(dim_1st, dim_2nd, bias=True)]
         # 两层注意力机制
         if self.type_attention:
             self.at1 = nn.ModuleList()
@@ -52,7 +60,7 @@ class HGAT(nn.Module):
             for t in range(self.ntype):
                 self.at1.append(SelfAttention(dim_1st, t, 50))
                 self.at2.append(SelfAttention(dim_2nd, t, 50))
-
+        # self.at1 有三个attention 机制，是不同类型的； self.at2同理
         self.dropout = dropout
 
     def forward(self, x_list, adj_list, adj_all=None):
