@@ -34,11 +34,9 @@ def presentation_point(db, corpus):
     """
     计算核心点
     :param db: 训练得到模型
-    :param corpus: 原始文本数据
+    :param corpus: 原始文本数据, list
     :return: 事件簇列表，事件簇核心点列表, 噪音数据列表
     """
-    # 将dataframe改成numpy
-    corpus = np.array(corpus)
     labels = db.labels_  # 获取预测标签数据
     # 获取聚类数量
     n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)

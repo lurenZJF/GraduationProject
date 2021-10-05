@@ -17,7 +17,7 @@ def feature_vector(sentences: list, matrix=True):
     # 词频矩阵 Frequency Matrix Of Words
     # sublinear_tf,是否应用子线性tf缩放，即用1 + log（tf）替换tf；
     # max_df：float in range [ 0.0，1.0 ]或int，default = 1.0；当构建词汇时，忽略文档频率严格高于给定阈值（语料库特定停止词）的术语。
-    vertorizer = TfidfVectorizer(sublinear_tf=True, max_df=0.46)
+    vertorizer = TfidfVectorizer(sublinear_tf=True)
     transformer = TfidfTransformer()
     # Fit Raw Documents
     freq_words_matrix = vertorizer.fit_transform(sentences)
