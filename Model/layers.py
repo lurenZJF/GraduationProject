@@ -121,6 +121,13 @@ class Attention_NodeLevel(nn.Module):
         self.gamma = gamma
 
     def forward(self, input1, input2, adj):
+        """
+
+        :param input1: 类型I的特征输入
+        :param input2: 类型II的特征输入
+        :param adj:
+        :return:
+        """
         h = input1
         g = input2
         N = h.size()[0]
@@ -143,6 +150,7 @@ class Attention_NodeLevel(nn.Module):
             attention = torch.mul(attention, adj.sum(1).repeat(M, 1).t())
             attention = torch.add(attention * self.gamma, adj.to_dense() * (1 - self.gamma))
         del (zero_vec)
+        # 计算得到新的表征
         h_prime = torch.matmul(attention, g)
         return h_prime
 
@@ -182,6 +190,7 @@ class GraphAttentionConvolution(Module):
             for i in range(self.ntype):
                 h[i] = (torch.spmm(h[i], global_W))
         outputs = []
+        # 不同类型之间的表征
         for t1 in range(self.ntype):
             x_t1 = []
             for t2 in range(self.ntype):
@@ -189,11 +198,9 @@ class GraphAttentionConvolution(Module):
                 if len(adj_list[t1][t2]._values()) == 0:
                     x_t1.append(torch.zeros(adj_list[t1][t2].shape[0], self.out_features, device=self.bias.device))
                     continue
-
                 if self.bias is not None:
                     x_t1.append(self.att_list[t1](h[t1], h[t2], adj_list[t1][t2]) + self.bias)
                 else:
                     x_t1.append(self.att_list[t1](h[t1], h[t2], adj_list[t1][t2]))
             outputs.append(x_t1)
-
-        return outputs
+        return outputs  # list

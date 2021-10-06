@@ -63,9 +63,11 @@ class TwitterPreprocessor:
         for sentence in doc.sentences:
             for ent in sentence.ents:
                 if ent.type in ["ORG", "PERSON", "GPE", 'WORK_OF_ART']:
-                    ents.append(ent.text)
+                    # ents.append(ent.text)  # 区别大小写
+                    ents.append(ent.text.lower())
         for t in tag:
-            ents.append(t[1:])
+            # ents.append(t[1:])
+            ents.append(t[1:].lower())
         return ents  # 实体列表
 
     def get_token(self, text: str):
