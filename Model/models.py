@@ -65,6 +65,7 @@ class HGAT(nn.Module):
 
     def forward(self, x_list, adj_list, adj_all=None):
         x0 = x_list
+        # print("输入的特征长度", len(x0))
         if not self.node_attention:
             x1 = [None for _ in range(self.ntype)]
             # First Layer
@@ -84,6 +85,7 @@ class HGAT(nn.Module):
         else:
             x1 = [None for _ in range(self.ntype)]
             x1_in = self.gc1(x0, adj_list)
+            # print("gc1之后的输出维度：", len(x1_in))
             for t1 in range(len(x1_in)):
                 x_t1 = x1_in[t1]
                 if self.type_attention:
