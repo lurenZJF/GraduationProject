@@ -35,22 +35,19 @@ class HANLayer(nn.Module):
     实现Node Level和 Semantic-level 计算
     Arguments
     ---------
-    num_meta_paths : 根据 metapath 产生的异构图数量
+    num_meta_paths : list,标记各个图对应的特征输入维度
     in_size : 输入特征维度
     out_size : 输出特征维度
     layer_num_heads : 多头机制中，head数量
     dropout : Dropout机制中舍弃的概率
     """
-    def __init__(self, num_meta_paths, in_size, out_size, layer_num_heads, dropout, low_dim, high_dim):
+    def __init__(self, num_meta_paths: list, out_size, layer_num_heads, dropout):
         super(HANLayer, self).__init__()
-        self.num_meta_paths = num_meta_paths
         # One GAT layer for each meta path based adjacency matrix
         self.gat_layers = nn.ModuleList()
-        for i in range(num_meta_paths):
-            self.gat_layers.append(GATConv(in_size, out_size, layer_num_heads,
+        for i in range(len(num_meta_paths)):
+            self.gat_layers.append(GATConv(num_meta_paths[i], out_size, layer_num_heads,
                                            dropout, dropout, activation=F.elu))  # 调用实现多头机制的GAT模型
-        # 不同矩阵的维度转换
-        self.trans = nn.Linear(low_dim, high_dim, bias=True)
         self.semantic_attention = SemanticAttention(in_size=out_size * layer_num_heads)
 
     def forward(self, gs, hs):
@@ -62,12 +59,7 @@ class HANLayer(nn.Module):
         semantic_embeddings = []
         for i, g in enumerate(gs):
             # 每次循环根据一个图返回一条meat-path上的嵌入
-            semantic_embeddings.append(self.gat_layers[i](g, hs[i]).flatten(1))
-        # semantic_embeddings 中包含的是不同路径的语义,应该进行一个语义的对齐
-        # 假定话题是在最后一个语义上
-        topic = semantic_embeddings.pop()
-        # 转化维度
-        semantic_embeddings.append(self.trans(topic))
+            semantic_embeddings.append(self.gat_layers[i](g, hs).flatten(1))
         # 将不同路径上的语义进行聚合
         semantic_embeddings = torch.stack(semantic_embeddings, dim=1)  # (N, M, D * K)
         return self.semantic_attention(semantic_embeddings)   # (N, D * K)
@@ -85,19 +77,18 @@ class HGAN(nn.Module):
     num_heads : 每层layer中多头机制的数量
     dropout : Dropout机制中舍弃的概率
     """
-    def __init__(self, num_meta_paths, in_size, hidden_size, out_size,
-                 num_heads, dropout, low_dim=200, high_dim=500):
+    def __init__(self, num_meta_paths: list, hidden_size, out_size, num_heads, dropout):
         super(HGAN, self).__init__()
         self.write_emb = None
         self.layers = nn.ModuleList()
-        self.layers.append(HANLayer(num_meta_paths, in_size, hidden_size, num_heads[0], dropout))
+        self.layers.append(HANLayer(num_meta_paths, hidden_size, num_heads[0], dropout))
         for l in range(1, len(num_heads)):
-            self.layers.append(HANLayer(num_meta_paths, hidden_size * num_heads[l-1],
-                                        hidden_size, num_heads[l], dropout, low_dim, high_dim))
+            self.layers.append(HANLayer(num_meta_paths, hidden_size, num_heads[l], dropout))
         # 这里使用一层MLP
         self.predict = nn.Linear(hidden_size * num_heads[-1], out_size, bias=True)
 
     def forward(self, g, h):
+        print(h.shape)
         # 多层HANLayer，不管更新学习的嵌入
         for gnn in self.layers:
             h = gnn(g, h)

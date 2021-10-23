@@ -40,7 +40,7 @@ def glove2word2vec(glove_vector_file, output_model_file):
         return outfile
 
     model_file = prepend_line(glove_vector_file, output_model_file)
-    logger.info('Model %s successfully created !!' % output_model_file)
+    logger.info('HGAT %s successfully created !!' % output_model_file)
 
 
 # 根据预训练模型，生成word2vec向量
@@ -71,7 +71,7 @@ class GenerateWordVectors:
         word_vector[np.isnan(word_vector)] = 100
         return word_vector
 
-    def distance_matrix(self, words):
+    def distance_matrix(self, words, dis=True):
         """
         计算传入文本之间的距离矩阵
         :param corpus: 传入数据集
@@ -81,6 +81,9 @@ class GenerateWordVectors:
         embeddings = []
         for w in words:
             embeddings.append(self.embeddings(w))
-        # 计算欧式距离矩阵
-        sim_matrix = pairwise_distances(embeddings, metric='euclidean')
-        return np.array(sim_matrix)
+        if dis:
+            # 计算欧式距离矩阵
+            sim_matrix = pairwise_distances(embeddings, metric='euclidean')
+            return np.array(sim_matrix)
+        else:
+            return embeddings

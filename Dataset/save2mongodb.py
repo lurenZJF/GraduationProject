@@ -21,6 +21,7 @@ print(data.shape)
 # 按行遍历数据
 for index, row in data.iterrows():
     info = {
+        "_id": int(row["tweet_id"]),
         "event_id": int(row["event_id"]),
         "text": row["text"],
         "created_at": datetime.datetime.strftime(row["created_at"], '%Y-%m-%d')

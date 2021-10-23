@@ -70,8 +70,7 @@ def main(args):
     g, features, label, train_mask, val_mask, test_mask = load_data()
     print(features.shape[1], label.shape[1])
     # 将模型复制到GPU
-    model = HGAN(num_meta_paths=len(g),
-                in_size=features.shape[1],
+    model = HGAN(num_meta_paths=[200, 200],
                 hidden_size=args['hidden_units'],
                 out_size=label.shape[1],
                 num_heads=args['num_heads'],
