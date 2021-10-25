@@ -86,4 +86,4 @@ class GenerateWordVectors:
             sim_matrix = pairwise_distances(embeddings, metric='euclidean')
             return np.array(sim_matrix)
         else:
-            return embeddings
+            return np.array(embeddings)
