@@ -26,9 +26,8 @@ class GCN(nn.Module):
             self.layers.append(GraphConv(n_hidden, n_hidden, activation=None))
             self.bns.append(torch.nn.BatchNorm1d(n_hidden))
         # output layer
-        # self.layers.append(GraphConv(n_hidden, n_classes))
         # 这里使用一层MLP
-        self.predict = nn.Linear(n_classes, n_classes)
+        self.predict = nn.Linear(n_hidden, n_classes)
         self.dropout = dropout
 
     def forward(self, g, x):
