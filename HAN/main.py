@@ -11,10 +11,10 @@ import argparse
 from copy import deepcopy
 import warnings
 warnings.filterwarnings("ignore")
-sys.path.append('/home/penghao/Project/')
+sys.path.append('/home/dell/GraduationProject/')
 from HAN.utils import EarlyStopping, setup
 from HAN.model import HAN
-from HAN.build import load_data
+from HAN.build import load_data, load_imdb
 
 
 def score(logits, labels):
@@ -67,7 +67,8 @@ def main(args):
     """
     # 首先需要加载数据
     print("start HAN", flush=True)
-    g, features, label, train_mask, val_mask, test_mask = load_data()
+    # g, features, label, train_mask, val_mask, test_mask = load_data()
+    g, features, label, train_mask, val_mask, test_mask = load_imdb()
     print(features.shape[1],label.shape[1])
     # 将模型复制到GPU
     model = HAN(num_meta_paths=len(g),

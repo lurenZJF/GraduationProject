@@ -67,9 +67,6 @@ def evaluate(preds_list, y_list):
     preds = deepcopy(preds_probs)
     preds[np.arange(preds.shape[0]), preds.argmax(1)] = 1.0
     preds[np.where(preds < 1)] = 0.0
-    print(preds)
-    print(y_list)
-    exit()
     [precision, recall, F1, support] = precision_recall_fscore_support(y_list, preds, average='macro')
     ER = accuracy_score(y_list, preds) * 100
     print(' Ac: %6.2f' % ER,
@@ -142,10 +139,10 @@ def test(epoch, input_adj_test, input_features_test, idx_out_test, idx_test):
 
 if __name__ == "__main__":
     # 加载数据
-    path = "../Dataset/HGAT_train_data/out/"
+    path = "../Dataset/Pre_data/"
     adj, features, labels, idx_train_ori, idx_val_ori, idx_test_ori, idx_map = load_data(path=path)
-    adj = np.array(adj)
-    features = np.array(features)
+    # adj = np.array(adj)
+    # features = np.array(features)
     # print(adj.shape)
     # print(features.shape)
     # exit()

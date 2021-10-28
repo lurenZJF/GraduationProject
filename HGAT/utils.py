@@ -38,6 +38,7 @@ def load_divide_idx(path, idx_map):
             idx_test.append(idx_map.get(int(line.strip('\n'))))
 
     print("train, vali, test: ", len(idx_train), len(idx_val), len(idx_test))
+    print(idx_train)
     idx_train = torch.LongTensor(idx_train)
     idx_val = torch.LongTensor(idx_val)
     idx_test = torch.LongTensor(idx_test)
@@ -205,11 +206,7 @@ def nll_loss(preds, y):
     :param y:
     :return:
     """
-    # 修改这里有无问题呢
     y = y.max(1)[1]
-    print(y)
-    print(preds)
-    exit()
     return F.nll_loss(preds, y)
 
 
