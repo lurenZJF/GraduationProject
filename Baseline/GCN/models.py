@@ -1,43 +1,43 @@
-#!/usr/bin/python
-# -*- encoding:utf-8 -*-
+"""GCN using DGL nn package
+References:
+- Semi-Supervised Classification with Graph Convolutional Networks
+- Paper: https://arxiv.org/abs/1609.02907
+- Code: https://github.com/tkipf/gcn
+"""
+import torch
 import torch.nn as nn
+from dgl.nn.pytorch import GraphConv
 import torch.nn.functional as F
-from Baseline.GCN.layers import GraphConvolution	  # 简单的GCN层
+# from utils.util_funcs import init_random_state
 
 
-class GCN(nn.Module):	# nn.Module类的单继承
-    def __init__(self, nfeat, nhid, nclass, dropout):
-        """
-        GCN由两个GraphConvolution层构成,输出为输出层做log_softmax变换的结果
-        :param nfeat: 底层节点的参数，feature的个数
-        :param nhid: 隐层节点个数
-        :param nclass: 最终的分类数
-        :param dropout: dropout参数
-        """
+class GCN(nn.Module):
+    def __init__(self, in_feats, n_hidden, n_classes, n_layers, activation, dropout):
         super(GCN, self).__init__()
-        self.gc1_outdim = nhid
-        self.gc2_outdim = nclass
-        self.gc1 = GraphConvolution(nfeat, nhid)
-        # self.gc1代表GraphConvolution()，gc1输入尺寸nfeat，输出尺寸nhid
-        self.gc2 = GraphConvolution(nhid, nclass)
-        # self.gc2代表GraphConvolution()，gc2输入尺寸nhid，输出尺寸ncalss
-        self.dropout = dropout
+        # init_random_state()
+        self.layers = nn.ModuleList()
+        self.bns = torch.nn.ModuleList()
+        # input layer
+        self.layers.append(GraphConv(in_feats, n_hidden, activation=None))
+        # 归一化
+        self.bns.append(torch.nn.BatchNorm1d(n_hidden))
+        # hidden layers
+        for i in range(n_layers - 1):
+            self.layers.append(GraphConv(n_hidden, n_hidden, activation=None))
+            self.bns.append(torch.nn.BatchNorm1d(n_hidden))
+        # output layer
+        # self.layers.append(GraphConv(n_hidden, n_classes))
         # 这里使用一层MLP
-        self.predict = nn.Linear(nclass, nclass)
-        # dropout参数
+        self.predict = nn.Linear(n_classes, n_classes)
+        self.dropout = dropout
 
-    def forward(self, x, adj):
-        """
-        :param x: 输入特征
-        :param adj: 邻接矩阵
-        :return:
-        """
-        shape = x.shape[0]
-        gcn_out = F.relu(self.gc1(x, adj))
-        # 第二层GCN输出的图嵌入
-        gcn_out= F.relu(self.gc2(gcn_out, adj))
-        # training=self.training表示将模型整体的training状态参数传入dropout函数，没有此参数无法进行dropout
-        # gcn_out = F.dropout(gcn_out, self.dropout, training=self.training)
-        out = self.predict(gcn_out)
-        # 输出为输出层做log_softmax变换的结果，dim表示log_softmax将计算的维度
-        return F.log_softmax(out, dim=1)
+    def forward(self, g, x):
+        for i, conv in enumerate(self.layers[:-1]):
+            x = conv(g, x)
+            x = self.bns[i](x)
+            x = F.relu(x)
+            x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.layers[-1](g, x)
+        # output projection
+        predict_result = self.predict(x)
+        return F.log_softmax(predict_result, dim=1)
