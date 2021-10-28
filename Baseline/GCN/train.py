@@ -11,7 +11,7 @@ import warnings
 warnings.filterwarnings("ignore")
 sys.path.append('/home/dell/GraduationProject/')
 from Baseline.GCN.utils import setup, EarlyStopping
-from Baseline.GCN.data import load_data
+from Baseline.GCN.data import load_data, load_imdb
 from Baseline.GCN.models import GCN
 
 
@@ -60,7 +60,8 @@ def evaluate(model, g, features, labels, mask, loss_func):
 
 def main(args):
     # 加载数据
-    g, features, label, train_mask, val_mask, test_mask = load_data()
+    # g, features, label, train_mask, val_mask, test_mask = load_data()
+    g, features, label, train_mask, val_mask, test_mask = load_imdb()
     print("特征维度:", features.shape)
     # 将数据送到device
     features = features.to(args['device'])

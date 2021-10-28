@@ -4,6 +4,7 @@
 构建GCN需要的图
 """
 import scipy.sparse as sp
+import scipy.io as sio
 import torch
 from copy import deepcopy
 from sklearn.metrics import precision_recall_fscore_support
@@ -157,19 +158,20 @@ def load_graph(path=None, dataset="HGAT"):
 
     adj_all = adj_all + adj_all.T.multiply(adj_all.T > adj_all) - adj_all.multiply(adj_all.T > adj_all)
     adj_all = normalize_adj(adj_all + sp.eye(adj_all.shape[0]))
-    adj1 = adj_all[sum(len_list[:0]): sum(len_list[:1]), sum(len_list[:1]): sum(len_list[:2])]
-    adj2 = adj_all[sum(len_list[:0]): sum(len_list[:1]), sum(len_list[:2]): sum(len_list[:3])]
-    adj3 = adj_all[sum(len_list[:2]): sum(len_list[:3]), sum(len_list[:2]): sum(len_list[:3])]
+    adj1 = adj_all[sum(len_list[:0]): sum(len_list[:1]), sum(len_list[:1]): sum(len_list[:2])]  # 文本和话题之间的关系
+    adj2 = adj_all[sum(len_list[:0]): sum(len_list[:1]), sum(len_list[:2]): sum(len_list[:3])]  # 文本和实体之间的关系
+    adj3 = adj_all[sum(len_list[:2]): sum(len_list[:3]), sum(len_list[:2]): sum(len_list[:3])]  # 实体和实体之间的关系
+    adj5 = adj_all[sum(len_list[:0]): sum(len_list[:1]), sum(len_list[:0]): sum(len_list[:1])]  # 文本和文本之间的关系
     print(adj1.shape)
     print(adj2.shape)
     print(adj3.shape)
     # 从sparse变成tensor
-    adj4 = np.matmul(adj2.todense(), adj3.todense())
+    adj4 = np.matmul(adj2.todense(), adj3.todense())  # 文本通过实体之间的联系
     adj1 = adj1.todense()
-    adj1 = np.matmul(adj1, adj1.transpose())
+    adj1 = np.matmul(adj1, adj1.transpose())  # 文本-话题-文本之前的联系
     adj4 = np.matmul(adj4, adj4.transpose())
     idx_train, idx_val, idx_test = load_divide_idx(path, idx_map_list[0])
-    return sp.csr_matrix(adj1), Labels, idx_train, idx_val, idx_test, idx_map_list[0]
+    return sp.csr_matrix(adj4), Labels, idx_train, idx_val, idx_test, idx_map_list[0]
 
 
 def get_binary_mask(total_size, indices):
@@ -190,6 +192,7 @@ def load_data():
     # 加载图数据等
     graph, label, idx_train, idx_val, idx_test, idx_map_list = load_graph("../../Dataset/HGATN_train_data/")
     graph = dgl.from_scipy(graph)
+    graph = dgl.add_self_loop(graph)
     num_nodes = graph.number_of_nodes()  # 节点数量
     # 转化为tensor形式
     features = torch.FloatTensor(features)
@@ -198,6 +201,35 @@ def load_data():
     test_mask = get_binary_mask(num_nodes, idx_test)
     val_mask = get_binary_mask(num_nodes, idx_val)
     return graph, features, label, train_mask, val_mask, test_mask
+
+
+def load_imdb():
+    data = sio.loadmat("../../Dataset/imdb5k.mat")
+    print("load imdb data...")
+    adj = data["MAM"]
+    featuers = data["feature"]
+    idx_train = data["test_idx"]
+    idx_val = data["val_idx"]
+    idx_test = data["train_idx"]
+    label = data["label"]
+    # 构造图
+    adj = dgl.from_scipy(sp.csr_matrix(adj))
+    # 转化成tensor
+    featuers = torch.FloatTensor(featuers)
+    idx_train = torch.LongTensor(idx_train)
+    idx_val = torch.LongTensor(idx_val)
+    idx_test = torch.LongTensor(idx_test)
+    label = torch.LongTensor(label)
+    # 计算节点数量
+    num_nodes = adj.number_of_nodes()  # 节点数量
+    train_mask = get_binary_mask(num_nodes, idx_train)
+    test_mask = get_binary_mask(num_nodes, idx_test)
+    val_mask = get_binary_mask(num_nodes, idx_val)
+    return adj, featuers, label, train_mask, val_mask, test_mask
+
+
+
+
 
 
 # if __name__ == "__main__":

@@ -7,12 +7,12 @@ import time
 import torch
 import torch.nn.functional as F
 import sys
-# import warnings
-# warnings.filterwarnings("ignore")
+import warnings
+warnings.filterwarnings("ignore")
 sys.path.append('/home/dell/GraduationProject/')
 from Baseline.GAT.models import GAT
 from Baseline.GAT.utils import setup, EarlyStopping
-from Baseline.GAT.data import load_data
+from Baseline.GAT.data import load_data, load_imdb
 
 
 def score(logits, labels):
@@ -60,7 +60,8 @@ def evaluate(model, features, labels, mask, loss_func):
 
 def main(args):
     # 加载数据
-    g, features, label, train_mask, val_mask, test_mask = load_data()
+    # g, features, label, train_mask, val_mask, test_mask = load_data()
+    g, features, label, train_mask, val_mask, test_mask = load_imdb()
     print("特征维度:", features.shape)
     heads = args["num_heads"] * args["num_layers"]
     # 将数据送到device
