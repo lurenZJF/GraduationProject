@@ -11,9 +11,7 @@ program = sys.argv[0]
 logger = logging.getLogger(program)
 from gensim.models import KeyedVectors
 import numpy as np
-import time
 from sklearn.metrics import pairwise_distances
-import pandas as pd
 
 
 def glove2word2vec(glove_vector_file, output_model_file):
