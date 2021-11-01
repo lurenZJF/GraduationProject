@@ -7,6 +7,9 @@ import pymongo
 
 
 class MONGO(object):
+    """
+    从推文数据库中查询数据
+    """
     def __init__(self, database, collection):
         # 连接数据库
         self.client = pymongo.MongoClient("mongodb://localhost:27017/")
@@ -29,6 +32,33 @@ class MONGO(object):
             }
         )
         return res
+
+
+class ES(object):
+    """
+    查询，存储，合并事件
+    """
+    def __init__(self, database, collection):
+        # 连接数据库
+        self.client = pymongo.MongoClient("mongodb://localhost:27017/")
+        # 选择需要使用的数据库
+        self.database = self.client["TwitterEvent2012"]
+        # 选择数据库中的集合
+        self.collection = self.database["event"]
+
+    def get_events_filter_by_keywords_and_date(self, keywords_list, start_time, end_time, num=10):
+        res = self.collection.find(
+            {
+                "created_at": {"$gte": start_time,
+                               "$lt": end_time}
+            }
+        )
+
+
+
+
+
+
 
 
 # MG = MONGO("TwitterEvent2012", "tweets")
