@@ -7,10 +7,11 @@ import datetime
 import time
 import sys
 import numpy as np
+from math import sqrt
+from sklearn import metrics
 sys.path.append('/home/dell/GraduationProject/')
 from TextFiltering.stream import MONGO
 from Detect.utils import build_data
-from math import sqrt
 # from Baseline.glove2vec import *
 # from TextFiltering.twitter_preprocessor import *
 # 初始化分词实例
@@ -213,15 +214,38 @@ class SinglePassCluster:
 
             cluster_write.close()
 
+    def metric(self):
+        print("the number of cluster %s" % self.cluster_num)
+        print("spend time of cluster: %f" % self.spend_time)
+        predict = []
+        labels = []
+        for index, one_cluster in enumerate(self.cluster_list):
+            for i, id in enumerate(one_cluster.node_list):
+                predict.append(index)
+                labels.append(id)
+        # print(predict)
+        # print(labels)
+        # print(len(predict))
+        # print(len(labels))
+        # 计算各项指标
+        NMI = metrics.normalized_mutual_info_score(labels, predict)
+        NMI = round(NMI, 3)
+        ars = metrics.adjusted_rand_score(labels, predict)
+        ars = round(ars, 3)
+        # return [NMI, ars]
+        print(NMI, ars)
+
+
 
 if __name__ == "__main__":
     print("loading data")
+    # t1 = time.time()
     time_list = range_date("2012-10-10", "2012-11-07")
     MG = MONGO("TwitterEvent2012", "tweets")
     res = MG.query(time_list[0], time_list[-1])
     contents, time_info, labels_true = build_data(res)
-    # # 文本表征
-    # print("learn embeddings")
+    # 文本表征
+    print("learn embeddings")
     # token_w = []
     # for c in contents:
     #     words = Cut.get_token(c)
@@ -233,4 +257,6 @@ if __name__ == "__main__":
     # 对contents应用single-Pass
     print("start cluster")
     ans = SinglePassCluster(ids_list=labels_true, vector_list=embedding, title_list=contents)
-    print("聚类耗时：", ans.spend_time)
+    ans.metric()
+    # print("聚类耗时：", ans.spend_time)
+    # print("耗时：", time.time()-t1)
